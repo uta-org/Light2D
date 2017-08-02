@@ -93,6 +93,9 @@ half4 light2_fixed_frag (light2d_fixed_v2f i) : COLOR
 	half2 thisPos = i.thisPos;
 	half2 centerPos = i.centerPos;
 	#endif
+	#ifndef PATH_TRACKING_SAMPLES
+		#define PATH_TRACKING_SAMPLES 40 // count of path tracking steps
+	#endif
 
 	half sub = 1.0/PATH_TRACKING_SAMPLES;
 	half len = length((thisPos - centerPos)*i.aspect);
