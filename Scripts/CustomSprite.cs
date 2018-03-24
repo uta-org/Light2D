@@ -110,7 +110,7 @@ namespace Light2D
         private void OnWillRenderObject()
         {
             UpdateMeshData();
-            if (Application.isPlaying && LightingSystem.Instance.EnableNormalMapping)
+			if (Application.isPlaying && LightingSystem.Instance.EnableNormalMapping && Material.shader == Shader.Find("Transparent Normal Mapped"))
             {
                 RendererEnabled = _meshRenderer.enabled;
                 _meshRenderer.enabled = false; 
