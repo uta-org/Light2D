@@ -26,6 +26,7 @@ namespace Light2D
         private SerializedProperty _lightSourcesLayer;
         private SerializedProperty _ambientLightLayer;
         private SerializedProperty _lightObstaclesLayer;
+        private SerializedProperty _lightObstaclesReplacementShaderLayer;
         private SerializedProperty _lightObstaclesDistance;
         private SerializedProperty _lightTexturesFilterMode;
         private SerializedProperty _enableNormalMapping;
@@ -57,6 +58,7 @@ namespace Light2D
             _lightTexturesFilterMode = serializedObject.FindProperty("LightTexturesFilterMode");
             _enableNormalMapping = serializedObject.FindProperty("EnableNormalMapping");
             _affectOnlyThisCamera = serializedObject.FindProperty("AffectOnlyThisCamera");
+			_lightObstaclesReplacementShaderLayer = serializedObject.FindProperty("LightObstaclesReplacementShaderLayer");
         }
 
         public override void OnInspectorGUI()
@@ -187,6 +189,7 @@ namespace Light2D
             _lightSourcesLayer.intValue = EditorGUILayout.LayerField(new GUIContent("Light Sources Layer"), _lightSourcesLayer.intValue);
             _lightObstaclesLayer.intValue = EditorGUILayout.LayerField(new GUIContent("Light Obstacles Layer"), _lightObstaclesLayer.intValue);
             _ambientLightLayer.intValue = EditorGUILayout.LayerField(new GUIContent("Ambient Light Layer"), _ambientLightLayer.intValue);
+			EditorGUILayout.PropertyField(_lightObstaclesReplacementShaderLayer);
 
             // Apply changes to the serializedProperty - always do this in the end of OnInspectorGUI.
             serializedObject.ApplyModifiedProperties();

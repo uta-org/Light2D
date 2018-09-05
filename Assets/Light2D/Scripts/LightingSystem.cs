@@ -87,7 +87,8 @@ namespace Light2D
         public int LightSourcesLayer;
         public int AmbientLightLayer;
         public int LightObstaclesLayer;
-        public bool XZPlane;
+		public LayerMask LightObstaclesReplacementShaderLayer;
+		public bool XZPlane;
 
         private RenderTexture _ambientEmissionTexture;
         private RenderTexture _ambientTexture;
@@ -112,7 +113,8 @@ namespace Light2D
         private int _aditionalAmbientLightCycles = 0;
         private static LightingSystem _instance;
         private Shader _normalMapRenderShader;
-        private Camera _normalMapCamera;
+		private Shader _lightBlockerReplacementShader;
+		private Camera _normalMapCamera;
         private List<LightSprite> _lightSpritesCache = new List<LightSprite>();
         private Material _normalMappedLightMaterial;
         private Material _lightCombiningMaterial;
@@ -122,7 +124,25 @@ namespace Light2D
         private tk2dCamera _tk2dCamera;
 #endif
 
-        private float LightPixelsPerUnityMeter
+		private void Reset()
+		{
+			LightSourcesLayer = LayerMask.NameToLayer("LightSources");
+			AmbientLightLayer = LayerMask.NameToLayer("AmbientLight");
+			LightObstaclesLayer = LayerMask.NameToLayer("LightObstacles");
+		}
+
+		[ContextMenu("Create Camera")]
+		private void CreateCamera()
+		{
+			if (LightCamera == null)
+			{
+				var go = new GameObject("Ligt Camera", typeof(Camera));
+				go.transform.SetParent(transform, false);
+				LightCamera = go.GetComponent<Camera>();
+			}
+		}
+
+		private float LightPixelsPerUnityMeter
         {
             get { return 1/LightPixelSize; }
         }
@@ -295,7 +315,9 @@ namespace Light2D
 
             _alphaBlendedMaterial = new Material(Shader.Find("Light2D/Internal/Alpha Blended"));
 
-            if (XZPlane)
+			_lightBlockerReplacementShader = Shader.Find(@"Light2D/Internal/LightBlockerReplacementShader");
+
+			if (XZPlane)
                 Shader.EnableKeyword("LIGHT2D_XZ_PLANE");
             else
                 Shader.DisableKeyword("LIGHT2D_XZ_PLANE");
@@ -402,17 +424,25 @@ namespace Light2D
             ConfigLightCamera(true);
 
             var oldColor = LightCamera.backgroundColor;
+			var oldClearFlag = LightCamera.clearFlags;
             LightCamera.enabled = false;
             LightCamera.targetTexture = _obstaclesUpsampledTexture;
             LightCamera.cullingMask = 1 << LightObstaclesLayer;
             LightCamera.backgroundColor = new Color(1, 1, 1, 0);
 
-            _obstaclesPostProcessor.DrawMesh(LightCamera, LightObstaclesAntialiasing ? 2 : 1);
-
+			//normal
+			_obstaclesPostProcessor.DrawMesh(LightCamera, LightObstaclesAntialiasing ? 2 : 1);
             LightCamera.Render();
-            LightCamera.targetTexture = null;
+
+			//replacement
+			LightCamera.clearFlags = CameraClearFlags.Nothing;
+			LightCamera.cullingMask = LightObstaclesReplacementShaderLayer;
+			LightCamera.RenderWithShader(_lightBlockerReplacementShader, "RenderType");
+
+			LightCamera.targetTexture = null;
             LightCamera.cullingMask = 0;
             LightCamera.backgroundColor = oldColor;
+            LightCamera.clearFlags = oldClearFlag;
 
             _obstaclesTexture.DiscardContents();
             Graphics.Blit(_obstaclesUpsampledTexture, _obstaclesTexture);
@@ -562,7 +592,7 @@ namespace Light2D
         {
             if (BlurLightSources && LightSourcesBlurMaterial != null)
             {
-                Profiler.BeginSample("LightingSystem.OnRenderImage Bluring Light Sources");
+                UnityEngine.Profiling.Profiler.BeginSample("LightingSystem.OnRenderImage Bluring Light Sources");
 
                 if (_bluredLightTexture == null)
                 {
@@ -587,7 +617,7 @@ namespace Light2D
                     Graphics.Blit(_bluredLightTexture, _lightSourcesTexture);
                 }
 
-                Profiler.EndSample();
+                UnityEngine.Profiling.Profiler.EndSample();
             }
         }
 
@@ -596,7 +626,7 @@ namespace Light2D
             if (!EnableAmbientLight || AmbientLightComputeMaterial == null)
                 return;
 
-            Profiler.BeginSample("LightingSystem.OnRenderImage Ambient Light");
+            UnityEngine.Profiling.Profiler.BeginSample("LightingSystem.OnRenderImage Ambient Light");
 
             ConfigLightCamera(true);
 
@@ -647,7 +677,7 @@ namespace Light2D
 
                 if (BlurAmbientLight && AmbientLightBlurMaterial != null)
                 {
-                    Profiler.BeginSample("LightingSystem.OnRenderImage Bluring Ambient Light");
+                    UnityEngine.Profiling.Profiler.BeginSample("LightingSystem.OnRenderImage Bluring Ambient Light");
 
                     _prevAmbientTexture.DiscardContents();
                     AmbientLightBlurMaterial.mainTexture = _ambientTexture;
@@ -657,17 +687,17 @@ namespace Light2D
                     _prevAmbientTexture = _ambientTexture;
                     _ambientTexture = tmpblur;
 
-                    Profiler.EndSample();
+                    UnityEngine.Profiling.Profiler.EndSample();
                 }
             }
 
             _aditionalAmbientLightCycles = 0;
-            Profiler.EndSample();
+            UnityEngine.Profiling.Profiler.EndSample();
         }
 
         private void RenderLightOverlay(RenderTexture src, RenderTexture dest)
         {
-            Profiler.BeginSample("LightingSystem.OnRenderImage Light Overlay");
+            UnityEngine.Profiling.Profiler.BeginSample("LightingSystem.OnRenderImage Light Overlay");
             
             ConfigLightCamera(false);
 
@@ -715,7 +745,7 @@ namespace Light2D
 
             Graphics.Blit(_screenBlitTempTex, dest);
 
-            Profiler.EndSample();
+            UnityEngine.Profiling.Profiler.EndSample();
         }
 
         private void UpdateCamera()
