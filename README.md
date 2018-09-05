@@ -15,7 +15,24 @@
 * Colored lights and light obstacles. 
 * Particle system support. 
 * Normal mapping (too expensive for mobiles and not really tested). 
-* Supports Unity 5. 
+* Replacment Shader light blocker rendering for low setup light blockers
+* Supports Unity 2018.2+.
+
+## Contents
+* [How it works](#How-it-works)
+  * [Light obstacles texture](#Light-obstacles-texture)
+  * [Light sources texture](#Light-sources-texture)
+  * [Ambient light texture](#Ambient-light-texture)
+* [Overall pros and cons](#Overall-pros-and-cons)
+* [Setup guide](#Setup-guide)
+* [How to use](#How-to-use)
+* [Class reference](#Class-reference)
+* [LightingSystem settings](#LightingSystem-settings)
+* [Normal Mapping](#Normal-Mapping)
+* [Shaders](#Shaders)
+* [Replacement Shader Obstacles](#Replacement-Shader-Obstacles)
+* [Tips](#Tips)
+* [Troubleshoting](#Troubleshoting)
 
 ## How it works
 
@@ -97,6 +114,8 @@ When you just created lighting system you will see black screen. To fix that you
 To add light source click *GameObject / Light2D / Light Source* and configure sprite / scale / color of created light. Then adjust *Light Pixel Size* in lighting system. Light sources is using path tracking to make shadows.
 
 Next you cold add a light obstacle. To do this create sprite and set it's layer to *Light Obstacles* Layer or attach `LightObstacleGenerator` script to any `SpriteRenderer`. `LightObstacleGenerator` will create light obstacle from that sprite at runtime. Black obstacle is fully opaque, white is fully transparent. Colored obstacle will allow to pass some color components of light throught it. For example, red obstacle will make passing light red and absorb blue and green components.
+
+You could also use existing objects without copying them or needing to assign a specific layer. To do this you will need a custom shader that has a render type of "LightBlocker". An example shader that is a copy of the default Sprite shader is locaded in `Examples/Shader/SpriteBlockerShader` named `Custom/Sprite (Blocker)`. Just create a material with the shader or assign it to an existing one. Then you can adjust the obstacle color and texture weight. See the example scene named `Tilemap Example`
 
 *Ambient Light*. You could use ambient light to highlight big areas without light sources. To do that you need to create mesh / sprite renderer and set it's layer to *Ambient Light Layer*.
 
@@ -225,6 +244,12 @@ There is two ways to use normal mapping:
 *Additive Light Pow*. Affects bloom. Zero will turn off bloom. Bigger values will make bloom threshold higher.
 
 *Additive Light Add*. Bloom power. Bigger value will make stronger bloom.
+
+*LightBlockerReplacementShader*. Shader used for rendering obstacles using replacement shaders.
+
+## Replacement Shader Obstacles
+
+Using custom shaders with a subshader containing a tag *RenderType* with value *LightBlocker* will be rendered by the replacement shader `Light2D/Internal/LightBlockerReplacementShader`. Check out the *Tilemap Example* scene and the custom shader `Custom/Sprite (Blocker)`
 
 ## Tips:
 
