@@ -81,14 +81,16 @@ namespace Light2D
             if (_meshFilter == null)
                 _meshFilter = gameObject.AddComponent<MeshFilter>();
 
-#if UNITY_EDITOR
             if (Material == null)
             {
+#if UNITY_EDITOR
+                Material mat_sprite_default = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Material>("Sprites-Default.mat");
+#else
                 Material = Resources.GetBuiltinResource<Material>("Sprites-Default.mat");
-            }
 #endif
+            }
 
-            TryReleaseMesh();
+                TryReleaseMesh();
             _meshFilter.sharedMesh = _mesh = new Mesh();
             _mesh.MarkDynamic();
             _mesh.name = GeneratedMeshName;
