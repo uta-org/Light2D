@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#if UNITY_EDITOR
+
+using System;
 using System.Linq;
-using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -93,3 +93,5 @@ namespace Light2D
         }
     }
 }
+
+#endif
